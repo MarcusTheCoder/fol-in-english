@@ -1,0 +1,15 @@
+English to FOL translator & Evaluator
+
+Marcus is person      x is person
+Marcus is tired          x is tired
+Marcus has dog         x has dog
+Dog can know            dog has known
+
+Therefore dog knows a tired person 
+EVALUATE: 
+
+
+Left to right through a string
+When you find a keyword, get the appropriate objects of either side
+
+
