@@ -1,0 +1,26 @@
+
+-------------------------------------------------
+              fol-to-english
+-------------------------------------------------
+
+This interpreter evaluates statements 
+typed in and converts them into FOL
+predicates. These can then be evaluated
+by asking a question.
+
+example:
+
+> I am a parrot.
+> Parrots like pirates.
+> Do I like pirates?
+
+Yes
+
+rules:
+Sentances must begin with a capital letter.
+Proper nouns are not included in the dictionary
+and must be capitalized.
+Asking a question will not clear FOL predicates.
+To clear predicates, type $reset
+
+--------------------------------------------------

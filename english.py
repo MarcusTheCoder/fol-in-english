@@ -1,7 +1,7 @@
 
 """
 English is a language which evolved from other germanic languages in northwestern europe
-It has rules called grammar which dictate what words do and how they behave or express
+It has rules (grammar) which dictate what words do and how they behave or express
 information in sentances
 
 A sentance is a collection of words begining with a capital letter,
@@ -19,6 +19,9 @@ A sentance must include some noun or verb being used
         -- (we probably do not need to implement exclamative sentances,
             so we can say a '!' denotes an imperative)
 """
+from typing import Text
+
+
 class SentanceTypes:
     DECLARATION=0
     IMPERATIVE=1
@@ -42,7 +45,16 @@ class Punctuation:
     COMMA=","
     SEMICOLON=";"
     COLON=":"
+    PUNCTUATION_LIST = [".","?","!",",",";",":"]
 
+def numPuncExist(text):
+    """
+    Returns total count of punctuation in a given bit of text
+    """
+    totalC = 0
+    for ele in Punctuation.PUNCTUATION_LIST:
+        totalC += text.count(ele)           
+    return totalC
 
 
 class PartsOfSpeech:
@@ -69,6 +81,7 @@ class PartsOfSpeech:
 
 
     """
+    UNKNOWN = -1
     NOUN=0
     VERB=1
     PRONOUN=2
@@ -78,25 +91,54 @@ class PartsOfSpeech:
     CONJUNCTION=6
     INTERJECTION=7
 
-class Word(string):
+class Word(object):
     """
     Represents a single english word
     """
-    'Inherits string version of __init__
-    self.isPunct = False
+    'Inherits string version of __init__'
+    def __init__(self,txt,partOfSpeech=-1):
+        self.txt = txt
+        self.partOfSpeech = partOfSpeech
+
     
-    def isPunct(self):
-        self.isPunct = !isalnum(self)
-        return !isalnum(self) 
+    def isPunct(self):        
+        return not self.txt.isalnum()
 
+    def __str__(self) -> str:
+        return self.txt
+    def length(self):
+        return len(self.txt)
+
+#-------------------------------------------
+# PARTS OF SPEECH CLASSES
+#
 class Verb(Word):
-    """
-    Represents a Verb in the English Language
-    """
-    pass
+    def __init__(self, txt):
+        super().__init__(txt, pos=PartsOfSpeech.VERB)
+class Noun(Word):
+    def __init__(self, txt):
+        super().__init__(txt, pos=PartsOfSpeech.NOUN)
+class Pronoun(Word):
+    def __init(self,txt):
+        super().__init__(txt,pos=PartsOfSpeech.PRONOUN)
+class Adjective(Word):
+    def __init(self,txt):
+        super().__init__(txt,pos=PartsOfSpeech.ADJECTIVE)
+class Adverb(Word):
+    def __init(self,txt):
+        super().__init__(txt,pos=PartsOfSpeech.ADVERB)
 
+class Preposition(Word):
+    def __init(self,txt):
+        super().__init__(txt,pos=PartsOfSpeech.PREPOSITION) 
 
+class Conjunction(Word):
+    def __init(self,txt):
+        super().__init__(txt,pos=PartsOfSpeech.CONJUNCTION)
 
+#---------------------------------------------------------------
+# SENTANCE CLASSES
+#
 
 class Sentance(object):
     """
@@ -107,25 +149,81 @@ class Sentance(object):
     """
 
     def __init__(self,rawtext = ""):
-        self.rawtext = rawtext
-        self.words = []
-        self.punct = []
-        self.indepClauses = [] 'Can act as their own sentances'
-
-    '''
-    Returns a list of tuples which stores the index and the punctuation mark 
-    '''
+        self.rawtext = rawtext        
+        self.elements = self.__determineSeparatedComponents() # Contains both words and non words (punctuation)
+        self.words = [] # list with tuples of format (int (index of occurence),Word)
+        self.punct = [] # list with tuples of format (int (index of occurence),str (punct))
+        
+        'Can act as their own sentances'
+        
+    def __determineElements(self):
+        # First, separate based on commas and other punctuation
+        components = []
+        components = self.rawtext.split(' ')
+        for c in components:
+            # Break up further by punctuation
+            numP = numPuncExist(c)
+            if numP > 0:
+                # We must handle punctuation
+                if numP > 1:
+                    # This text chunk has invalid spacing!
+                    print("error: __determineElements(): Sentance specified has invalid spacing!")
+                    return []
+                else:
+                    if numPuncExist(c[len(c) - 1]) != 1:
+                        # Punctuation occurs at begining!
+                        print("error: __determineElements(): Sentance specified has invalid punctuation locations!")
+                        return []
+                    else:
+                        # Punctuation is at the back
+                        theWord = c[0:len(c) - 1]
+                        punct = c[len(c) - 1]
+                        components.append(Word(theWord))
+                        components.append(punct)
+            else:
+                # No punctuation parsing required
+                components.append(Word(c))
+        
+        return components
+    
     def __determinePunctuation(self):
+        """
+        Returns a list of tuples which 
+        stores the index and the punctuation mark 
+        """
         puncts = []
-        for part in self.parts:
-          pass
+        for i in range(0,len(self.elements)):
+            ele = self.elements[i]
+            if ele is not Word:
+                puncts.append((i,ele))
         return puncts
 
-    '''
-    Returns a list of tuples of words and the index in order of occurence. Does not include punctuation
-    '''
+    
     def __determineWords(self):
-        pass
+        """
+        Returns a list of tuples of words and the
+        index in order of occurence. Does not include punctuation
+        """
+        words = []
+        for i in range(0,len(self.elements)):
+            ele = self.elements[i]
+            if ele is Word:
+                words.append((i,ele))
+        return words
+        
+
+    def isValid(self):
+        """
+        Returns whether this sentance obeys the basic rules of english Sentances
+        (is the first word capitalized, are there any odd formats? is there a period or other terminator)
+        """
+        validity = True
+        validity = validity and len(self.elements) > 0 # There are at least some words
+        validity = validity and self.elements[0] is Word # The first element is a word
+        validity = validity and Word(self.elements[0]).txt[0].isupper() # The first Word is capitalized
+        validity = validity and numPuncExist(self.elements[len(self.elements) - 1]) == 1 # The sentance ends with punctuation
+
+        return validity
 
 class AnalyzedSentance(Sentance):
     """
@@ -139,7 +237,8 @@ class AnalyzedSentance(Sentance):
         '''Construct an AnalyzedSentance object'''
         Sentance.__init__(self,rawtext)
         self.words = __determineClassifiedWords()
-        self.sentanceType = SentanceTypes.declaration
+        self.sentanceType = SentanceTypes.DECLARATION
+        self.indepClauses = []
     
     def __determineIndependentClauses(self):
         """
@@ -156,7 +255,8 @@ class AnalyzedSentance(Sentance):
         Returns a list of tuples (word,index of occurence) where each word is classified
         into parts of speech (word will be one of the childclasses of "Word")
         """
-        pass
+        rtrn = []
+        return rtrn
 
     
     def __determineSentanceType(self):
@@ -175,11 +275,37 @@ class AnalyzedSentance(Sentance):
  #  MODULE METHODS
  #    
 
-def loadWordDictionary(filePath):
+class DictionaryFileFormats:
+    TXT=0
+    JSON=1 # Not supported yet
+    CSV=2 # Not supported yet
+
+def loadWordDictionary(filePath,format=DictionaryFileFormats.TXT):
     """
     Returns a dictionary which establishes words to parts of speech
     """ 
-    pass
+    d = {}
+    if format is DictionaryFileFormats.TXT:
+        df = open(filePath,"r")
+        currentMode = PartsOfSpeech.NOUN
+        for x in df:
+            if x.startswith("//"):
+                # This line is a comment
+                continue
+            if x[0].isnumeric():
+                currentMode = int(x)
+                continue
+            if not x[0].isalpha():
+                #Not valid word
+                continue
+            # -----------------------------------
+            d[x.strip()] = currentMode           
+        # Once done in the for loop, close
+        df.close()
+
+    return d
+
+
 
   
 

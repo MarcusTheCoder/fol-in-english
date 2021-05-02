@@ -1,0 +1,5 @@
+$about      Displays the about page with instructions
+$commands   Displays this command page
+$exit       Exit the program
+$reset      Reset the FOL statements (removes predicates and queries)
+
